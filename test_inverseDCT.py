@@ -1,5 +1,5 @@
 # coding:utf-8
-# test_inverseDCT.py 2012.11.1
+# test_inverseDCT.py 2012.11.2
 import inverseDCT
 import forwardDCT
 import unittest
@@ -99,8 +99,8 @@ class TestIDCT(unittest.TestCase):
 
         s3 = []
         for c in self.idct.result:
-            s3.append(c-128)
-        #print_dump64(s3, u"-128")
+            s3.append(c)
+        #print_dump64(s3)
  
         r = diff64(s, s3)
         #print u"計算誤差: %d" % r
@@ -126,11 +126,11 @@ class TestIDCT(unittest.TestCase):
         
         r = diff64(self.idct.result, self.idct_f.result)
         print u"計算誤差: %d" % r
-        self.assertTrue(r <= 2)
+        self.assertTrue(r <= 3)
 
         s3 = []
         for c in self.idct.result:
-            s3.append(c-128)
+            s3.append(c)
         print_dump64(s3, u"復元した画像")
  
         r = diff64(s, s3)
