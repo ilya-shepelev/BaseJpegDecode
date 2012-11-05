@@ -1,15 +1,15 @@
 # coding:utf-8
-# test_inverseDCT.py 2012.11.2
+# test_inverseDCT.py 2012.11.5
 import inverseDCT
 import forwardDCT
 import unittest
 import copy
 
-class my_idct(inverseDCT.inverseDCT):
+class my_idct(inverseDCT.inverseDCT_aan):
     def outputBLOCK(self, mcu, block, values):
         self.result = copy.deepcopy(values)
 
-class my_idct_f(inverseDCT.inverseDCT_f):
+class my_idct_f(inverseDCT.inverseDCT_aan_f):
     def outputBLOCK(self, mcu, block, values):
         self.result = copy.deepcopy(values)
 
@@ -20,7 +20,6 @@ def print_dump64(s, title=None):
         print "%+5d," % v,
         if i%8 == 7:
             print
-
 
 def diff64(s1, s2):
     r = 0
@@ -137,7 +136,7 @@ class TestIDCT(unittest.TestCase):
         print u"計算誤差: %d" % r
         self.assertTrue(r <= 3)
 
-class TestDCT(unittest.TestCase):
+class TestIDCT(unittest.TestCase):
     def setUp(self):
         self.dct_f = forwardDCT.forwardDCT_f()
         self.dct_i = forwardDCT.forwardDCT_i()

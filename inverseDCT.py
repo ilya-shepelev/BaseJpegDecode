@@ -48,6 +48,26 @@ def CHECK32bit(data):
     elif data <-(2<<30):
         raise ValueError("32bit over flow")
 
+class inverseDCT_aan(object): # AAN整数値演算版
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self):
+        self._result = [0]*64
+        self.aan = aanIDCT.aanIDCT()
+
+    @abc.abstractmethod
+    def outputBLOCK(self, mcu, block, values):
+        pass
+
+    def inputBLOCK(self, mcu, block, scan, value):
+        uv = zigzag[scan]
+        if uv == 0:
+            self._s = [0]*64
+        self._s[uv] = value
+        if uv == 63:
+            self.aan.conv(self._result, self._s)
+            self.outputBLOCK(mcu, block, self._result)
+
 class inverseDCT_aan_f(object): # AAN浮動小数点演算版
     __metaclass__ = abc.ABCMeta
 
@@ -69,7 +89,7 @@ class inverseDCT_aan_f(object): # AAN浮動小数点演算版
             self.aan.conv(self._result, self._s)
             self.outputBLOCK(mcu, block, self._result)
 
-class inverseDCT(object): # 整数演算版・最適化・イベント駆動
+class inverseDCT_tbl(object): # データ駆動,省RAMメモリ
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
@@ -133,99 +153,20 @@ class inverseDCT(object): # 整数演算版・最適化・イベント駆動
                 self._sum[i] /= self._cucvQ
             self.outputBLOCK(mcu, block, self._sum)
 
-
-class inverseDCT_f(): # 浮動小数点演算版
-    def __init__(self, callback=None):
-        self.N = 8
-        self._result = [0]*64
-
-    @abc.abstractmethod
-    def outputBLOCK(self, mcu, block, values):
-        pass
-
-    def calc(self, result, s):
-        for y in range(self.N):
-            for x in range(self.N):
-                sum = 0.0
-                for v in range(self.N):
-                    cv = 1.0
-                    if v == 0:
-                        cv /= math.sqrt(2)
-                    for u in range(self.N):
-                        cu = 1.0
-                        if u == 0:
-                            cu /= math.sqrt(2)
-                        vu = v*8+u
-                        cosxu = math.cos((x*2+1)*u*math.pi/(self.N*2))
-                        cosyv = math.cos((y*2+1)*v*math.pi/(self.N*2))
-                        sum += cu * cv * s[vu] * cosxu * cosyv
-                self._result[y*8+x] = sum / (self.N/2)
-
-    def inputBLOCK(self, mcu, block, scan, value):
-        uv = zigzag[scan]
-        if uv == 0:
-            self._s = [0]*64
-        self._s[uv] = value
-        if uv == 63:
-            self.calc(self._result, self._s)
-            self.outputBLOCK(mcu, block, self._result)
-
-class inverseDCT_i(): # 整数演算版
-    def __init__(self, callback=None):
-        self.N=8
-        self.callback = callback
-        self.result = [0]*64
-
-        self._cosxuQ = 32
-        self._cosxu = {}
-        for x in range(self.N):
-            for u in range(self.N):
-                value = math.cos((x*2+1)*u*math.pi/(self.N*2))
-                self._cosxu[(x,u)] = int(round(value * self._cosxuQ))
-
-        self._cucvQ = 32
-        self._cucv = {}
-        for v in range(self.N):
-            for u in range(self.N):
-                value = 1.0/(self.N/2)
-                if v == 0 and u == 0:
-                    value /= 2.0
-                elif v == 0 or u == 0:
-                    value /= math.sqrt(2)
-                self._cucv[(v,u)] = int(round(value * self._cucvQ))
-
-    def calc(self, mcu, block, s):
-        for y in range(self.N):
-            for x in range(self.N):
-                sum = 0
-                for v in range(self.N):
-                    for u in range(self.N):
-                        vu = v*8+u
-                        t1 = self._cucv[(u,v)] * s[vu] * self._cosxu[(x, u)] * self._cosxu[(y, v)]
-                        CHECK32bit(t1)
-                        t1 /= self._cosxuQ
-                        t1 /= self._cosxuQ
-                        sum += t1
-                        CHECK16bit(sum)
-                value = sum / self._cucvQ
-                self.result[y*8+x] = value
-        if self.callback:
-            self.callback(mcu, block, self.result)
-
-    def input(self, mcu, block, scan, value):
-        uv = zigzag[scan]
-        if uv == 0:
-            self._s = [0]*64
-        self._s[uv] = value
-        if uv == 63:
-            self.calc(mcu, block, self._s)
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     import argparse
     import profile
     import inspect
+
+    class my_idct_aan(inverseDCT_aan):
+        def outputBLOCK(self, mcu, block, values):
+            if mcu != 0:
+                return
+            for i,v in enumerate(values):
+                print "%02X" % v,
+                if i%8 == 7:
+                    print
 
     class my_idct_aan_f(inverseDCT_aan_f):
         def outputBLOCK(self, mcu, block, values):
@@ -236,7 +177,7 @@ if __name__ == "__main__":
                 if i%8 == 7:
                     print
 
-    class my_idct(inverseDCT):
+    class my_idct_tbl(inverseDCT_tbl):
         def outputBLOCK(self, mcu, block, values):
             if mcu != 0:
                 return
@@ -247,7 +188,7 @@ if __name__ == "__main__":
 
     class TableAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            idct = my_idct()
+            idct = my_idct_tbl()
             print "const int cucv[] = {"
             for i,v in enumerate(idct._cucv):
                 print "%d," % v,
@@ -271,7 +212,7 @@ if __name__ == "__main__":
                         print
             print "};"
 
-    idct = my_idct()
+    idct_aan = my_idct_aan()
     idct_aan_f = my_idct_aan_f()
     s = [-127]*64
     s[0] = 1023
@@ -283,7 +224,7 @@ if __name__ == "__main__":
 
     class ProfileAction(argparse.Action):
         def __call__(self, parser, namespace, values, option_string=None):
-            profile.run("loop(idct)")
+            profile.run("loop(idct_aan)")
             profile.run("loop(idct_aan_f)")
 
     parser = argparse.ArgumentParser()

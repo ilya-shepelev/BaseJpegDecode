@@ -1,5 +1,5 @@
 # coding:utf-8
-# SimpleJpegDecode.py 2012.11.4
+# SimpleJpegDecode.py 2012.11.5
 import copy
 import logging
 import BaseJpegDecode
@@ -13,7 +13,7 @@ def adjust(value):
         return 255
     return int(value)
 
-class my_idct(inverseDCT.inverseDCT_aan_f):
+class my_idct(inverseDCT.inverseDCT_aan):
     def __init__(self, callback=None):
         super(my_idct, self).__init__()
         self._callback = callback
@@ -45,31 +45,12 @@ def convYUVtoRGB(y, u, v):
        b = 0
     return [r, g, b]
 
-def convYUVtoRGB_f(y, u, v):
-    r = int(y + v * 1.4020)              + 128
-    g = int(y - u * 0.3441 - v * 0.7139) + 128
-    b = int(y + u * 1.7718 - v * 0.0012) + 128
-    if r > 255:
-        r = 255
-    elif r < 0:
-        r = 0
-    if g > 255:
-        g = 255
-    elif g < 0:
-        g = 0
-    if b > 255:
-        b = 255
-    elif b < 0:
-       b = 0
-    return [r, g, b]
-
 class SimpleJpegDecode(BaseJpegDecode.BaseJpegDecode):
     def __init__(self, callback=None, output_mode=RGB24):
         super(SimpleJpegDecode, self).__init__()
         self._idct = my_idct(self.outputBLOCK)
         self._callback = callback # callback(x, y, data)
         self._output_mode = output_mode
-
 
     def _format_YUV(self, mcu, block, values):
         if block == 0:
