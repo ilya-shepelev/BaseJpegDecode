@@ -1,5 +1,5 @@
 # coding:utf-8
-# SimpleJpegDecode.py 2012.11.5
+# SimpleJpegDecode.py 2012.11.15
 import copy
 import logging
 import BaseJpegDecode
@@ -58,8 +58,9 @@ class SimpleJpegDecode(BaseJpegDecode.BaseJpegDecode):
         if block < self._yblock+1: # Y0,Y1,Cb or Y0,Y1,Y2,Y3,Cb
             self.block_data[block] = copy.deepcopy(values)
             return
-        mcu_x = mcu % (self.width/16)
-        mcu_y = mcu / (self.width/16)
+        mcu_x_count = (self.width+15)/16 # 画像の幅のMCUの個数
+        mcu_x = mcu % mcu_x_count
+        mcu_y = mcu / mcu_x_count
         if self._yblock == 2:
             for y in range(8):
                 for x in range(16):
@@ -87,8 +88,9 @@ class SimpleJpegDecode(BaseJpegDecode.BaseJpegDecode):
         if block < self._yblock+1: # Y0,Y1,Cb or Y0,Y1,Y2,Y3,Cb
             self.block_data[block] = copy.deepcopy(values)
             return
-        mcu_x = mcu % (self.width/16)
-        mcu_y = mcu / (self.width/16)
+        mcu_x_count = (self.width+15)/16 # 画像の幅のMCUの個数
+        mcu_x = mcu % mcu_x_count
+        mcu_y = mcu / mcu_x_count
         if self._yblock == 2:
             for y in range(8):
                 for x in range(16):
