@@ -1,5 +1,5 @@
 # coding:utf-8
-# test_aanIDCT.py 2012.11.5
+# test_aanIDCT.py 2013/1/28
 #
 import math
 import unittest
@@ -7,6 +7,13 @@ import aanIDCT
 
 DCTSIZE = 8
 DCTSIZE2 = 64
+
+def range_limit(val):
+    if val < -128:
+        return -128
+    elif val > 127:
+        return 127
+    return val
 
 class prototypeIDCT:
     def conv(self, output, input):
@@ -25,7 +32,7 @@ class prototypeIDCT:
                         cosxu = math.cos((x*2+1)*u*math.pi/(DCTSIZE*2))
                         cosyv = math.cos((y*2+1)*v*math.pi/(DCTSIZE*2))
                         sum += cu * cv * input[vu] * cosxu * cosyv
-                output[y*8+x] = int(round(sum / (DCTSIZE/2)))
+                output[y*8+x] = range_limit(int(round(sum / (DCTSIZE/2))))
 
 class Test_aanIDCT(unittest.TestCase):
     def setUp(self):
