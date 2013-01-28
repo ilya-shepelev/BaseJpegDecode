@@ -1,5 +1,5 @@
+# aanIDCT.py 2013/1/27
 # coding:utf-8
-# aanIDCT.py 2012.11.5
 #
 # AANアルゴリズムによる逆DCT
 # libjpeg(jpeg-8d)jidctfst.c jidctflt.c からの移植
@@ -9,6 +9,13 @@ import logging
 
 DCTSIZE = 8
 DCTSIZE2 = 64
+
+def range_limit(val):
+    if val < -128:
+        return -128
+    elif val > 127:
+        return 127
+    return val
 
 class aanIDCT: # 整数値演算版
     def __init__(self):
@@ -121,7 +128,7 @@ class aanIDCT: # 整数値演算版
                ws[pos+7] == 0:
                 dcval = ws[pos+0]
                 for x in range(DCTSIZE):
-                    output[pos+x] = self.IDESCALE(dcval)
+                    output[pos+x] = range_limit(self.IDESCALE(dcval))
                 continue
 
             # Even part
@@ -153,14 +160,14 @@ class aanIDCT: # 整数値演算版
             tmp5 = tmp11 - tmp6
             tmp4 = tmp10 - tmp5
 
-            output[pos+0] = self.IDESCALE(tmp0 + tmp7)
-            output[pos+7] = self.IDESCALE(tmp0 - tmp7)
-            output[pos+1] = self.IDESCALE(tmp1 + tmp6)
-            output[pos+6] = self.IDESCALE(tmp1 - tmp6)
-            output[pos+2] = self.IDESCALE(tmp2 + tmp5)
-            output[pos+5] = self.IDESCALE(tmp2 - tmp5)
-            output[pos+3] = self.IDESCALE(tmp3 + tmp4)
-            output[pos+4] = self.IDESCALE(tmp3 - tmp4)
+            output[pos+0] = range_limit(self.IDESCALE(tmp0 + tmp7))
+            output[pos+7] = range_limit(self.IDESCALE(tmp0 - tmp7))
+            output[pos+1] = range_limit(self.IDESCALE(tmp1 + tmp6))
+            output[pos+6] = range_limit(self.IDESCALE(tmp1 - tmp6))
+            output[pos+2] = range_limit(self.IDESCALE(tmp2 + tmp5))
+            output[pos+5] = range_limit(self.IDESCALE(tmp2 - tmp5))
+            output[pos+3] = range_limit(self.IDESCALE(tmp3 + tmp4))
+            output[pos+4] = range_limit(self.IDESCALE(tmp3 - tmp4))
 
 
 class aanIDCT_f: # 浮動小数点演算版
@@ -259,7 +266,7 @@ class aanIDCT_f: # 浮動小数点演算版
                ws[pos+7] == 0:
                 dcval = ws[pos+0]
                 for x in range(DCTSIZE):
-                    output[pos+x] = self.IDESCALE(dcval, self.PASS1_BITS+3)
+                    output[pos+x] = range_limit(self.IDESCALE(dcval, self.PASS1_BITS+3))
                 continue
 
             # Even part
@@ -291,14 +298,14 @@ class aanIDCT_f: # 浮動小数点演算版
             tmp5 = tmp11 - tmp6
             tmp4 = tmp10 - tmp5
 
-            output[pos+0] = self.IDESCALE(tmp0 + tmp7, self.PASS1_BITS+3)
-            output[pos+7] = self.IDESCALE(tmp0 - tmp7, self.PASS1_BITS+3)
-            output[pos+1] = self.IDESCALE(tmp1 + tmp6, self.PASS1_BITS+3)
-            output[pos+6] = self.IDESCALE(tmp1 - tmp6, self.PASS1_BITS+3)
-            output[pos+2] = self.IDESCALE(tmp2 + tmp5, self.PASS1_BITS+3)
-            output[pos+5] = self.IDESCALE(tmp2 - tmp5, self.PASS1_BITS+3)
-            output[pos+3] = self.IDESCALE(tmp3 + tmp4, self.PASS1_BITS+3)
-            output[pos+4] = self.IDESCALE(tmp3 - tmp4, self.PASS1_BITS+3)
+            output[pos+0] = range_limit(self.IDESCALE(tmp0 + tmp7, self.PASS1_BITS+3))
+            output[pos+7] = range_limit(self.IDESCALE(tmp0 - tmp7, self.PASS1_BITS+3))
+            output[pos+1] = range_limit(self.IDESCALE(tmp1 + tmp6, self.PASS1_BITS+3))
+            output[pos+6] = range_limit(self.IDESCALE(tmp1 - tmp6, self.PASS1_BITS+3))
+            output[pos+2] = range_limit(self.IDESCALE(tmp2 + tmp5, self.PASS1_BITS+3))
+            output[pos+5] = range_limit(self.IDESCALE(tmp2 - tmp5, self.PASS1_BITS+3))
+            output[pos+3] = range_limit(self.IDESCALE(tmp3 + tmp4, self.PASS1_BITS+3))
+            output[pos+4] = range_limit(self.IDESCALE(tmp3 - tmp4, self.PASS1_BITS+3))
 
 
 if __name__ == "__main__":

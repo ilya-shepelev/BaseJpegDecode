@@ -1,5 +1,5 @@
+# SimpleJpegDecode.py 2013/1/27
 # coding:utf-8
-# SimpleJpegDecode.py 2012.11.15
 import copy
 import logging
 import BaseJpegDecode

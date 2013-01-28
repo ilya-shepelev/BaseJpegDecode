@@ -1,5 +1,5 @@
+# inverseDCT.py 2013/1/27
 # coding:utf-8
-# inverseDCT.py 2012.11.4
 import abc
 import math
 import logging
@@ -66,6 +66,8 @@ class inverseDCT_aan(object): # AAN整数値演算版
         self._s[uv] = value
         if uv == 63:
             self.aan.conv(self._result, self._s)
+            for i in range(64):
+                CHECK8bit(self._result[i])
             self.outputBLOCK(mcu, block, self._result)
 
 class inverseDCT_aan_f(object): # AAN浮動小数点演算版
@@ -74,7 +76,6 @@ class inverseDCT_aan_f(object): # AAN浮動小数点演算版
     def __init__(self):
         self._result = [0]*64
         self.aan = aanIDCT.aanIDCT_f()
-        #self.aan = aanIDCT.aanIDCT_jidctfst()
 
     @abc.abstractmethod
     def outputBLOCK(self, mcu, block, values):
@@ -87,6 +88,8 @@ class inverseDCT_aan_f(object): # AAN浮動小数点演算版
         self._s[uv] = value
         if uv == 63:
             self.aan.conv(self._result, self._s)
+            for i in range(64):
+                CHECK8bit(self._result[i])
             self.outputBLOCK(mcu, block, self._result)
 
 class inverseDCT_tbl(object): # データ駆動,省RAMメモリ

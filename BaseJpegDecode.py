@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+# BaseJpegDecode.py 2013/1/27
 # coding:utf-8
-# BaseJpegDecode.py 2012.10.30
 import abc
 import logging
 from collections import Counter
@@ -111,13 +110,15 @@ MARK_DQT  = 0xdb
 MARK_DRI  = 0xdd
 MARK_APP  = 0xe0
 
-SEQ_INIT = 0
-SEQ_MARK = 1
-SEQ_SEG_LEN  = 2
-SEQ_SEG_LEN2 = 3
-SEQ_SEG_BODY = 4
-SEQ_SOS  = 5
-SEQ_SOS2 = 6
+SEQ_INIT     = 0
+SEQ_SOI      = 1
+SEQ_FRAME    = 2
+SEQ_MARK     = 3
+SEQ_SEG_LEN  = 4
+SEQ_SEG_LEN2 = 5
+SEQ_SEG_BODY = 6
+SEQ_SOS      = 7
+SEQ_SOS2     = 8
 
 class BaseJpegDecode(object):
     __metaclass__ = abc.ABCMeta
@@ -180,12 +181,11 @@ class BaseJpegDecode(object):
                 self._scan += 1
             else: # AC
                 if self._huff.run == 0 and self._huff.value_size == 0: # EOB
-                    self._scan = 63
-                    self.outputAC(self._mcu, self._block, self._scan, 0)
+                    self.outputAC(self._mcu, self._block, 63, 0)
                     self._scan = 64
                 else:
                     for i in range(self._huff.run):
-                        self.outputAC(self._mcu, self._block, self._scan, 0)
+                        #self.outputAC(self._mcu, self._block, self._scan, 0)
                         self._scan += 1
                     self.outputAC(self._mcu, self._block, self._scan, value)
                     self._scan += 1
@@ -241,10 +241,23 @@ class BaseJpegDecode(object):
             raise ValueError('input error')
         if self._seq == SEQ_INIT:
             if c == 0xff:
+                self._seq = SEQ_SOI
+        elif self._seq == SEQ_SOI:
+            if c == MARK_SOI:
+                self.outputMARK(c)
+                self._seq = SEQ_FRAME
+            else:
+                self._seq = SEQ_INIT
+        elif self._seq == SEQ_FRAME:
+            if c == 0xff:
                 self._seq = SEQ_MARK
+            else:
+                self._seq = SEQ_INIT
         elif self._seq == SEQ_MARK:
             self.outputMARK(c)
             if c == MARK_SOI:
+                self._seq = SEQ_FRAME
+            elif c == MARK_EOI or c == 0x00:
                 self._seq = SEQ_INIT
             else:
                 self._mark = c
@@ -276,7 +289,7 @@ class BaseJpegDecode(object):
                 self._restart()
                 self._seq = SEQ_SOS
             else:
-                self._seq = SEQ_INIT
+                self._seq = SEQ_FRAME
         elif self._seq == SEQ_SOS:
             if c == 0xff:
                 self._seq = SEQ_SOS2
